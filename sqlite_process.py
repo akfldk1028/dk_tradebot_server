@@ -283,6 +283,10 @@ def update_total_assets_and_roi(api_num, account):
 
         conn.commit()
         print(f"Data updated without trade for API {api_num} at {current_time}.")
+        border = "+" + "-" * 90 + "+"
+        print(border)
+        print("|" + f"API_{api_num} 최종 자산: {total_assets} ROI: {roi}" + "|")
+        print(border)
 
 
 def update_final_assets():
