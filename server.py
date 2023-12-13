@@ -20,7 +20,9 @@ app = FastAPI()
 
 # 데이터베이스에서 모든 trades 레코드를 가져오는 함수
 def get_trades():
-    conn = sqlite3.connect("/home/hanvit4303/dk_tradebot/spot_stockdata.db")
+    conn = sqlite3.connect(
+        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
+    )
     conn.row_factory = (
         sqlite3.Row
     )  # This enables column access by name: row['column_name']

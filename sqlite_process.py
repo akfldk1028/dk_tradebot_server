@@ -9,7 +9,9 @@ def update_balances_in_db(api_num, account, init_asset):
     new_usdt_balance = account.get_api_balance(api_num)
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    with sqlite3.connect("/home/hanvit4303/dk_tradebot/spot_stockdata.db") as conn:
+    with sqlite3.connect(
+        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
+    ) as conn:
         conn.row_factory = sqlite3.Row
 
         cursor = conn.cursor()
@@ -56,7 +58,9 @@ def update_after_buy(api_num, symbol, amount_bought, account, current_price):
     # Database column names
 
     # Connect to the SQLite database
-    with sqlite3.connect("/home/hanvit4303/dk_tradebot/spot_stockdata.db") as conn:
+    with sqlite3.connect(
+        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
+    ) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         # 마지막 행의 데이터를 조회합니다
@@ -134,7 +138,9 @@ def update_after_sell(api_num, symbol, amount_sold, account, current_price):
     asset_usdt_balance = account.get_api_balance(api_num)
 
     # Connect to the SQLite database
-    with sqlite3.connect("/home/hanvit4303/dk_tradebot/spot_stockdata.db") as conn:
+    with sqlite3.connect(
+        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
+    ) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         # Query the latest row of data
@@ -198,7 +204,9 @@ def update_without_trade(api_num, account):
 
     :param api_num: The API number (1 or 2).
     """
-    with sqlite3.connect("/home/hanvit4303/dk_tradebot/spot_stockdata.db") as conn:
+    with sqlite3.connect(
+        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
+    ) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -235,7 +243,9 @@ def update_total_assets_and_roi(api_num, account):
     :param api_num: The API number (1 or 2).
     :param account: The BinanceAccount instance.
     """
-    with sqlite3.connect("/home/hanvit4303/dk_tradebot/spot_stockdata.db") as conn:
+    with sqlite3.connect(
+        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
+    ) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -293,7 +303,9 @@ def update_final_assets():
     """
     모든 태스크가 완료된 후 최종 자산과 ROI를 데이터베이스에서 가져와 업데이트합니다.
     """
-    with sqlite3.connect("/home/hanvit4303/dk_tradebot/spot_stockdata.db") as conn:
+    with sqlite3.connect(
+        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
+    ) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
