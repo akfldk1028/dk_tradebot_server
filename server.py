@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import sqlite3
 from typing import List
 
@@ -17,9 +17,7 @@ def root():
 
 # Function to get trades from the database
 def get_trades():
-    conn = sqlite3.connect(
-        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
-    )
+    conn = sqlite3.connect("./spot_stockdata_fastapi.db")
     conn.row_factory = sqlite3.Row  # Enables column access by name: row['column_name']
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM trades")
@@ -28,7 +26,9 @@ def get_trades():
     return [dict(row) for row in rows]
 
 
-# Endpoint to get all trades data in JSON format
 @app.get("/spottrades/", response_model=List[dict])
 async def read_trades():
-    return get_trades()
+    try:
+        return get_trades()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
