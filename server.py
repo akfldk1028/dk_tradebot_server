@@ -1,31 +1,26 @@
 from fastapi import FastAPI
+import sqlite3
+from typing import List
 
+# Create a single instance of FastAPI
 app = FastAPI(
     title="DK Stock Portfolio",
     description="This is a spot trading bot",
 )
 
 
+# Define a root endpoint
 @app.get("/")
-def aa():
-    return "보낼 값"
+def root():
+    return {"message": "Welcome to the DK Stock Portfolio"}
 
 
-from fastapi import FastAPI
-import sqlite3
-from typing import List
-
-app = FastAPI()
-
-
-# 데이터베이스에서 모든 trades 레코드를 가져오는 함수
+# Function to get trades from the database
 def get_trades():
     conn = sqlite3.connect(
         "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
     )
-    conn.row_factory = (
-        sqlite3.Row
-    )  # This enables column access by name: row['column_name']
+    conn.row_factory = sqlite3.Row  # Enables column access by name: row['column_name']
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM trades")
     rows = cursor.fetchall()
@@ -33,7 +28,7 @@ def get_trades():
     return [dict(row) for row in rows]
 
 
-# 모든 trades 데이터를 JSON 형태로 반환하는 엔드포인트
+# Endpoint to get all trades data in JSON format
 @app.get("/spottrades/", response_model=List[dict])
 async def read_trades():
     return get_trades()
