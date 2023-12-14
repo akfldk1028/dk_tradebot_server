@@ -5,7 +5,8 @@ import logging
 import requests
 import pandas as pd
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from urllib3.util.retry import Retry
+import time  # time 모듈 추가
 
 # Create a single instance of FastAPI
 app = FastAPI(
@@ -26,8 +27,17 @@ session.mount("https://", HTTPAdapter(max_retries=retries))
 @app.get("/")
 def root():
     try:
+        end_time = int(time.time() * 1000)  # 현재 시간을 밀리초로 계산
+        start_time = end_time - 10 * 24 * 60 * 60 * 1000  # 10일 전 시간을 밀리초로 계산
+
+        params = {
+            "symbol": "BTCBUSD",
+            "interval": "1h",
+            "startTime": start_time,
+            "endTime": end_time,
+        }
         # 세션을 사용하여 요청을 합니다.
-        response = session.get("https://api.binance.com/api/v3/ticker/24hr")
+        response = session.get("https://api.binance.com/api/v3/klines", params=params)
         response.raise_for_status()  # 실패한 상태 코드에 대해 예외를 발생시킵니다.
         data = response.json()  # 성공 시, JSON 데이터를 파싱합니다.
         return data
@@ -56,6 +66,35 @@ logging.basicConfig(
     filename="app.log",
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
+
+
+def get_historical_data(symbol):
+    end_time = int(time.time() * 1000)  # 현재 시간을 밀리초로 계산
+    start_time = end_time - 10 * 24 * 60 * 60 * 1000  # 10일 전 시간을 밀리초로 계산
+
+    params = {
+        "symbol": symbol,
+        "interval": "1h",
+        "startTime": start_time,
+        "endTime": end_time,
+    }
+
+    response = session.get("https://api.binance.com/api/v3/klines", params=params)
+    response.raise_for_status()
+    data = response.json()
+    return data
+
+
+@app.get("/historical_data/")
+async def read_historical_data():
+    trades = get_trades()
+    historical_data = {}
+    for trade in trades:
+        symbol_api_1 = trade["symbol_API_1"]
+        symbol_api_2 = trade["symbol_API_2"]
+        historical_data[symbol_api_1] = get_historical_data(symbol_api_1)
+        historical_data[symbol_api_2] = get_historical_data(symbol_api_2)
+    return historical_data
 
 
 # Function to get trades from the database
