@@ -2,6 +2,9 @@ from fastapi import FastAPI, HTTPException
 import sqlite3
 from typing import List
 import logging
+import requests
+import pandas as pd
+
 
 # Create a single instance of FastAPI
 app = FastAPI(
@@ -13,7 +16,11 @@ app = FastAPI(
 # Define a root endpoint
 @app.get("/")
 def root():
-    return {"message": "Welcome to the DK Stock Portfolio"}
+    response = requests.get("https://api.binance.com/api/v3/ticker/24hr")
+    response.raise_for_status()
+    data = response.json()
+    df = pd.DataFrame(data)
+    return df
 
 
 @app.get("/ha")

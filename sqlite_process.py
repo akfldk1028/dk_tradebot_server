@@ -42,7 +42,9 @@ def update_balances_in_db(api_num, account, init_asset):
         conn.commit()
 
 
-def update_after_buy(api_num, symbol, amount_bought, account, current_price):
+def update_after_buy(
+    api_num, symbol, amount_bought, account, current_price, commission
+):
     """
     Update the database after buying a symbol.
 
@@ -70,11 +72,8 @@ def update_after_buy(api_num, symbol, amount_bought, account, current_price):
         # API에 따라 현재 잔액과 총 자산을 가져옵니다
         current_usdt_balance = row[f"USDT_API_{api_num}"]
         current_asset_value = row[f"ASSET_API_{api_num}"]
-        # 현재 보유 코인 정보를 가져옵니다
+        # buy - 수수료  를 해야 마지막 코인의 양이나옴
 
-        # 코인심볼과 코인의 양
-        coin_asset = amount_bought * current_price
-        current_usdt_balance -= coin_asset
         # 현재 보유 코인 정보 업데이트
         symbol_holdings_str = row[f"symbol_API_{api_num}"]
         current_symbol_holdings = (
@@ -119,6 +118,88 @@ def update_after_buy(api_num, symbol, amount_bought, account, current_price):
         conn.commit()
 
 
+def update_after_buy2(
+    api_num,
+    symbol,
+    amount_bought,
+    account,
+    current_price,
+    commission,
+    cummulativeQuoteQty,
+):
+    # Fetch the new USDT balance and update symbol holdings
+    # asset_usdt_balance = account.get_api_balance(api_num)  # 가정된 USDT 잔액
+    # new_symbol_holdings = get_updated_holdings(api_num, symbol, amount_bought, account)
+
+    # Connect to the SQLite database
+    with sqlite3.connect(
+        "/home/hanvit4303/dk_tradebot/server/spot_stockdata_fastapi.db"
+    ) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        # 마지막 행의 데이터를 조회합니다
+        cursor.execute("SELECT * FROM trades ORDER BY id DESC LIMIT 1")
+        row = cursor.fetchone()
+
+        # API에 따라 현재 잔액과 총 자산을 가져옵니다
+        current_usdt_balance = row[f"USDT_API_{api_num}"]
+        current_asset_value = row[f"ASSET_API_{api_num}"]
+        symbol_holdings_str = row[f"symbol_API_{api_num}"]
+        current_symbol_holdings = (
+            json.loads(symbol_holdings_str) if symbol_holdings_str else {}
+        )
+
+        # 거래 수수료 계산
+        qty = amount_bought
+        final_amount = qty - commission
+
+        current_symbol_holdings[symbol] = (
+            current_symbol_holdings.get(symbol, 0) + final_amount
+        )
+        # cummulativeQuoteQty 총 거래 금액, '10.76000000'
+
+        total_coin_value = 0  # 모든 코인의 가치 합계
+        for coin, quantity in current_symbol_holdings.items():
+            if coin == symbol:
+                coin_value = cummulativeQuoteQty  # 구매한 코인의 현재 가치
+            else:
+                coin_value = quantity * account.get_current_price(
+                    coin
+                )  # 기타 보유 코인의 현재 가치
+            total_coin_value += coin_value
+
+        current_usdt_balance -= cummulativeQuoteQty
+
+        print(f"{current_usdt_balance}current_usdt_balance")
+
+        current_asset_value = total_coin_value + current_usdt_balance  # 최종 자산 가치
+
+        # 데이터베이스 업데이트
+        cursor.execute(
+            f"""
+            UPDATE trades
+            SET USDT_API_{api_num} = ?, ASSET_API_{api_num} = ?, symbol_API_{api_num} = ?
+            WHERE id = ?
+            """,
+            (
+                current_usdt_balance,
+                current_asset_value,
+                json.dumps(current_symbol_holdings),
+                row["id"],
+            ),
+        )
+
+        # 업데이트된 값 출력
+        conn.commit()
+
+    border = "+" + "-" * 45 + "BUY" + "-" * 45 + "+"
+    print(border)
+    print(f"USDT_API_{api_num} updated to: {current_usdt_balance}")
+    print(f"ASSET_API_{api_num} updated to: {current_asset_value}")
+    print(f"symbol_API_{api_num} updated to: {json.dumps(current_symbol_holdings)}")
+
+
 def get_updated_holdings(api_num, symbol, amount_bought, account):
     # 현재 보유 코인 정보를 업데이트합니다
     current_holdings = account.get_api_holdings(api_num)
@@ -126,7 +207,9 @@ def get_updated_holdings(api_num, symbol, amount_bought, account):
     return current_holdings
 
 
-def update_after_sell(api_num, symbol, amount_sold, account, current_price):
+def update_after_sell(
+    api_num, symbol, amount_sold, account, current_price, cummulativeQuoteQty
+):
     """
     Update the database after selling a symbol.
 
@@ -154,17 +237,19 @@ def update_after_sell(api_num, symbol, amount_sold, account, current_price):
         current_symbol_holdings = (
             json.loads(symbol_holdings_str) if symbol_holdings_str else {}
         )
+        gross_sale_value = cummulativeQuoteQty
+        current_usdt_balance += gross_sale_value
 
         # Calculate the value received from the sale and update USDT balance
-        coin_asset = amount_sold * current_price
-        current_usdt_balance += coin_asset
+        # coin_asset = amount_sold * current_price
+        # current_usdt_balance += coin_asset
 
         # Update the holdings after sale
         if current_symbol_holdings.get(symbol, 0) >= amount_sold:
-            current_symbol_holdings[symbol] -= amount_sold
+            del current_symbol_holdings[symbol]
         else:
             # Handle error or log if sold amount is greater than holdings
-            print("Error: Selling more than holdings.")
+            print("에러입니당 Error: Selling more than holdings.")
 
         total_coin_value = 0  # Total value of all coins
         for coin, quantity in current_symbol_holdings.items():
