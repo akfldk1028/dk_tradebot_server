@@ -84,6 +84,34 @@ async def fetch_data(symbol: str = Query(...)):
         raise HTTPException(status_code=500, detail=f"기타 오류 발생: {err}")
 
 
+@app.get("/fetch15m")
+async def fetch_data(symbol: str = Query(...)):
+    try:
+        end_time = int(time.time() * 1000)  # 현재 시간을 밀리초로 계산
+        start_time = end_time - 10 * 24 * 60 * 60 * 1000  # 10일 전 시간을 밀리초로 계산
+
+        params = {
+            "symbol": symbol,
+            "interval": "15m",
+            "startTime": start_time,
+            "endTime": end_time,
+        }
+        # 세션을 사용하여 요청을 합니다.
+        response = requests.get("https://api.binance.com/api/v3/klines", params=params)
+        response.raise_for_status()  # 실패한 상태 코드에 대해 예외를 발생시킵니다.
+        data = response.json()  # 성공 시, JSON 데이터를 파싱합니다.
+        return data
+    except requests.exceptions.HTTPError as http_err:
+        # HTTP 오류 출력
+        raise HTTPException(status_code=400, detail=f"HTTP 오류 발생: {http_err}")
+    except requests.exceptions.ConnectionError as conn_err:
+        # 연결 오류 출력
+        raise HTTPException(status_code=400, detail=f"연결 오류 발생: {conn_err}")
+    except Exception as err:
+        # 기타 오류 출력
+        raise HTTPException(status_code=500, detail=f"기타 오류 발생: {err}")
+
+
 @app.get("/ha")
 def root2():
     return {"message": "W222"}

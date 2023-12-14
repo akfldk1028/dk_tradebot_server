@@ -195,9 +195,11 @@ def update_after_buy2(
 
     border = "+" + "-" * 45 + "BUY" + "-" * 45 + "+"
     print(border)
-    print(f"USDT_API_{api_num} updated to: {current_usdt_balance}")
-    print(f"ASSET_API_{api_num} updated to: {current_asset_value}")
-    print(f"symbol_API_{api_num} updated to: {json.dumps(current_symbol_holdings)}")
+    print(f"USDT_API_{api_num}에 다음과 같이 업데이트 합니다:  {current_usdt_balance}")
+    print(f"ASSET_API_{api_num}에 다음과 같이 업데이트 합니다:  {current_asset_value}")
+    print(
+        f"symbol_API_{api_num}에 다음과 같이 업데이트 합니다: {json.dumps(current_symbol_holdings)}"
+    )
 
 
 def get_updated_holdings(api_num, symbol, amount_bought, account):
@@ -237,6 +239,9 @@ def update_after_sell(
         current_symbol_holdings = (
             json.loads(symbol_holdings_str) if symbol_holdings_str else {}
         )
+        print(
+            f"{current_symbol_holdings}+ current_symbol_holdings current_symbol_holdings"
+        )
         gross_sale_value = cummulativeQuoteQty
         current_usdt_balance += gross_sale_value
 
@@ -245,11 +250,13 @@ def update_after_sell(
         # current_usdt_balance += coin_asset
 
         # Update the holdings after sale
-        if current_symbol_holdings.get(symbol, 0) >= amount_sold:
+        # current_symbol_holdings = {"QTUMUSDT": 1.998, "CRVUSDT": 13.986}
+        # 코인의 양임 >  amount_sold = 2
+        if current_symbol_holdings.get(symbol, 0) > 0:
             del current_symbol_holdings[symbol]
         else:
             # Handle error or log if sold amount is greater than holdings
-            print("에러입니당 Error: Selling more than holdings.")
+            print("에러입니당 후 Error: Selling more than holdings.")
 
         total_coin_value = 0  # Total value of all coins
         for coin, quantity in current_symbol_holdings.items():
@@ -276,9 +283,11 @@ def update_after_sell(
         )
         border = "+" + "-" * 45 + "SELL" + "-" * 45 + "+"
         print(border)
-        print(f"USDT_API_{api_num} updated to: {current_usdt_balance}")
-        print(f"ASSET_API_{api_num} updated to: {current_asset_value}")
-        print(f"symbol_API_{api_num} updated to: {json.dumps(current_symbol_holdings)}")
+        print(f"USDT_API_{api_num}에 다음과 같이 업데이트 합니다: {current_usdt_balance}")
+        print(f"ASSET_API_{api_num}에 다음과 같이 업데이트 합니다: : {current_asset_value}")
+        print(
+            f"symbol_API_{api_num}에 다음과 같이 업데이트 합니다:  {json.dumps(current_symbol_holdings)}"
+        )
 
         conn.commit()
 
