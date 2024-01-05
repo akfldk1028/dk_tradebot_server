@@ -84,6 +84,64 @@ async def fetch_data(symbol: str = Query(...)):
         raise HTTPException(status_code=500, detail=f"기타 오류 발생: {err}")
 
 
+@app.get("/fetch1m")
+async def fetch_data(symbol: str = Query(...)):
+    try:
+        end_time = int(time.time() * 1000)
+        start_time = end_time - 1 * 1 * 30 * 60 * 1000
+
+        params = {
+            "symbol": symbol,
+            "interval": "1m",  # 5분 간격으로 변경
+            "startTime": start_time,
+            "endTime": end_time,
+        }
+        # 세션을 사용하여 요청을 합니다.
+        response = requests.get("https://api.binance.com/api/v3/klines", params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        # 10분 간격의 데이터로 병합하는 로직을 여기에 추가합니다.
+        # 예: 인접한 두 캔들스틱의 데이터를 병합하여 하나의 10분 캔들스틱을 생성
+
+        return data  # 병합된 10분 간격 데이터 반환
+    except requests.exceptions.HTTPError as http_err:
+        raise HTTPException(status_code=400, detail=f"HTTP 오류 발생: {http_err}")
+    except requests.exceptions.ConnectionError as conn_err:
+        raise HTTPException(status_code=400, detail=f"연결 오류 발생: {conn_err}")
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"기타 오류 발생: {err}")
+
+
+@app.get("/fetch3m")
+async def fetch_data(symbol: str = Query(...)):
+    try:
+        end_time = int(time.time() * 1000)
+        start_time = end_time - 1 * 1 * 60 * 60 * 1000  # 예: 7일 전 시간
+
+        params = {
+            "symbol": symbol,
+            "interval": "3m",  # 5분 간격으로 변경
+            "startTime": start_time,
+            "endTime": end_time,
+        }
+        # 세션을 사용하여 요청을 합니다.
+        response = requests.get("https://api.binance.com/api/v3/klines", params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        # 10분 간격의 데이터로 병합하는 로직을 여기에 추가합니다.
+        # 예: 인접한 두 캔들스틱의 데이터를 병합하여 하나의 10분 캔들스틱을 생성
+
+        return data  # 병합된 10분 간격 데이터 반환
+    except requests.exceptions.HTTPError as http_err:
+        raise HTTPException(status_code=400, detail=f"HTTP 오류 발생: {http_err}")
+    except requests.exceptions.ConnectionError as conn_err:
+        raise HTTPException(status_code=400, detail=f"연결 오류 발생: {conn_err}")
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"기타 오류 발생: {err}")
+
+
 @app.get("/fetch5m")
 async def fetch_data(symbol: str = Query(...)):
     try:
