@@ -88,7 +88,7 @@ async def fetch_data(symbol: str = Query(...)):
 async def fetch_data(symbol: str = Query(...)):
     try:
         end_time = int(time.time() * 1000)
-        start_time = end_time - 7 * 24 * 60 * 60 * 1000  # 예: 7일 전 시간
+        start_time = end_time - 1 * 24 * 60 * 60 * 1000  # 예: 7일 전 시간
 
         params = {
             "symbol": symbol,
@@ -117,7 +117,7 @@ async def fetch_data(symbol: str = Query(...)):
 async def fetch_data(symbol: str = Query(...)):
     try:
         end_time = int(time.time() * 1000)  #
-        start_time = end_time - 7 * 24 * 60 * 60 * 1000  #
+        start_time = end_time - 3 * 24 * 60 * 60 * 1000  #
 
         params = {
             "symbol": symbol,
