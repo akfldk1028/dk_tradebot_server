@@ -372,3 +372,51 @@ async def read_trades():
         logging.exception("An error occurred while fetching trades.")
         # Respond with an HTTP 500 error
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/fetch_history")
+async def fetch_history(symbol: str = Query(...), interval: str = Query("30m")):
+    try:
+        limit = 500  # 최대 데이터 포인트 수 (바이낸스 제한)
+        total_data_points = 3000  # 원하는 데이터 포인트 수
+        all_data = []  # 데이터를 저장할 리스트
+
+        # 현재 시간을 밀리초로 계산
+        end_time = int(time.time() * 1000)
+
+        # 반복하여 데이터 가져오기
+        for _ in range(total_data_points // limit):
+            # API 파라미터 설정
+            params = {
+                "symbol": symbol,
+                "interval": interval,
+                "limit": limit,
+                "endTime": end_time,
+            }
+
+            # 바이낸스 API 호출
+            response = requests.get(
+                "https://api.binance.com/api/v3/klines", params=params
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            # 데이터 추가
+            all_data.extend(data)
+
+            # 다음 호출을 위한 종료 시간 업데이트
+            end_time = data[0][0]  # 첫 번째 데이터의 'Open Time'
+
+        return all_data
+    except requests.exceptions.HTTPError as http_err:
+        # HTTP 오류 출력
+        raise HTTPException(status_code=400, detail=f"HTTP 오류 발생: {http_err}")
+    except requests.exceptions.ConnectionError as conn_err:
+        # 연결 오류 출력
+        raise HTTPException(status_code=400, detail=f"연결 오류 발생: {conn_err}")
+    except Exception as err:
+        # 기타 오류 출력
+        raise HTTPException(status_code=500, detail=f"기타 오류 발생: {err}")
+
+
+# 이 함수는 FastAPI 경로 '/fetch_data'에 설정되어 있으며, 심볼과 간격을 입력으로 받아 해당 데이터를 JSON 형식으로 반환합니다.
