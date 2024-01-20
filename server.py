@@ -441,16 +441,26 @@ async def fetch_history(symbol: str = Query(...), interval: str = Query("30m")):
 # 이 함수는 FastAPI 경로 '/fetch_data'에 설정되어 있으며, 심볼과 간격을 입력으로 받아 해당 데이터를 JSON 형식으로 반환합니다.
 @app.post("/update_grid_account")
 async def update_grid_account(data: dict = Body(...)):
-    """
-    Receives JSON data and processes it.
-    """
     try:
-        # data는 요청 본문으로부터 전달받은 JSON 데이터
-        # 예: 파일에 저장, 데이터베이스에 저장, 로그 기록 등
+        # 파일이 존재하는지 확인하고, 존재하면 데이터를 불러옵니다.
+        filename = "grid_account_updated.json"
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                existing_data = json.load(file)
+        else:
+            existing_data = {}
 
-        # 예시: 파일에 저장
-        with open("grid_account_updated.json", "w") as file:
-            json.dump(data, file, indent=4)
+        # 새 데이터 추가
+        existing_data.update(data)
+
+        # 키 개수가 5000개를 초과하는 경우, 가장 오래된 데이터를 삭제
+        while len(existing_data) > 3000:
+            oldest_key = min(existing_data.keys())
+            del existing_data[oldest_key]
+
+        # 수정된 데이터를 파일에 저장
+        with open(filename, "w") as file:
+            json.dump(existing_data, file, indent=4)
 
         return {"message": "Data updated successfully"}
     except Exception as e:
