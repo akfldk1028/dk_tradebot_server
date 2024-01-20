@@ -9,8 +9,6 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import time  # time 모듈 추가
 import os
-from binance.client import Client
-from requests.exceptions import HTTPError
 
 # Create a single instance of FastAPI
 app = FastAPI(
