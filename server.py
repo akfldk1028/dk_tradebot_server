@@ -483,3 +483,50 @@ async def get_grid_account_updated():
         raise HTTPException(status_code=500, detail="Error decoding JSON")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+
+# 이 함수는 FastAPI 경로 '/fetch_data'에 설정되어 있으며, 심볼과 간격을 입력으로 받아 해당 데이터를 JSON 형식으로 반환합니다.
+@app.post("/update_grid_second_account")
+async def update_grid_account(data: dict = Body(...)):
+    try:
+        # 파일이 존재하는지 확인하고, 존재하면 데이터를 불러옵니다.
+        filename = "grid_second_account_updated.json"
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                existing_data = json.load(file)
+        else:
+            existing_data = {}
+
+        # 새 데이터 추가
+        existing_data.update(data)
+
+        # 키 개수가 5000개를 초과하는 경우, 가장 오래된 데이터를 삭제
+        while len(existing_data) > 3000:
+            oldest_key = min(existing_data.keys())
+            del existing_data[oldest_key]
+
+        # 수정된 데이터를 파일에 저장
+        with open(filename, "w") as file:
+            json.dump(existing_data, file, indent=4)
+
+        return {"message": "Data updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+
+@app.get("/get_grid_second_account")
+async def get_grid_account_updated():
+    """
+    Returns the data from grid_account_updated.json.
+    """
+    try:
+        # 파일에서 데이터를 읽어옵니다.
+        with open("grid_second_account_updated.json", "r") as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Error decoding JSON")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
