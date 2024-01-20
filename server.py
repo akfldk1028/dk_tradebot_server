@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Query
+import json
+from fastapi import Body, FastAPI, HTTPException, Query
 import sqlite3
 from typing import List
 import logging
@@ -7,6 +8,9 @@ import pandas as pd
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import time  # time 모듈 추가
+import os
+from binance.client import Client
+from requests.exceptions import HTTPError
 
 # Create a single instance of FastAPI
 app = FastAPI(
@@ -21,6 +25,23 @@ retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 50
 
 # HTTP 어댑터에 재시도 설정을 추가합니다.
 session.mount("https://", HTTPAdapter(max_retries=retries))
+
+
+# BINANCE_API_KEY = os.getenv('BINANCE_API_KEY')
+# BINANCE_API_SECRET = os.getenv('BINANCE_API_SECRET')
+
+# # 바이낸스 클라이언트 인스턴스 생성
+# client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
+# @app.get("/futures_account_balance")
+# async def get_futures_account_balance():
+#     try:
+#         # 바이낸스 API를 호출하여 선물 계좌의 잔고 정보를 가져옵니다.
+#         account_balance = client.futures_account_balance()
+#         return account_balance
+#     except HTTPError as http_err:
+#         raise HTTPException(status_code=400, detail=f"HTTP 오류 발생: {http_err}")
+#     except Exception as err:
+#         raise HTTPException(status_code=500, detail=f"기타 오류 발생: {err}")
 
 
 # Define a root endpoint
@@ -420,3 +441,37 @@ async def fetch_history(symbol: str = Query(...), interval: str = Query("30m")):
 
 
 # 이 함수는 FastAPI 경로 '/fetch_data'에 설정되어 있으며, 심볼과 간격을 입력으로 받아 해당 데이터를 JSON 형식으로 반환합니다.
+@app.post("/update_grid_account")
+async def update_grid_account(data: dict = Body(...)):
+    """
+    Receives JSON data and processes it.
+    """
+    try:
+        # data는 요청 본문으로부터 전달받은 JSON 데이터
+        # 예: 파일에 저장, 데이터베이스에 저장, 로그 기록 등
+
+        # 예시: 파일에 저장
+        with open("grid_account_updated.json", "w") as file:
+            json.dump(data, file, indent=4)
+
+        return {"message": "Data updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+
+@app.get("/get_grid_account")
+async def get_grid_account_updated():
+    """
+    Returns the data from grid_account_updated.json.
+    """
+    try:
+        # 파일에서 데이터를 읽어옵니다.
+        with open("grid_account_updated.json", "r") as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Error decoding JSON")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
