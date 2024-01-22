@@ -452,12 +452,12 @@ async def update_grid_account(data: dict = Body(...)):
 
         latest_key = max(existing_data.keys(), default=None)
 
-        if "historyInfo" not in data and "historyInfo" in existing_data.get(
-            latest_key, {}
-        ):
-            data["historyInfo"] = existing_data[latest_key]["historyInfo"]
-        if "historyInfo" in data and "historyInfo" in existing_data.get(latest_key, {}):
-            data["historyInfo"].update(existing_data[latest_key]["historyInfo"])
+        # if "historyInfo" not in data and "historyInfo" in existing_data.get(
+        #     latest_key, {}
+        # ):
+        #     data["historyInfo"] = existing_data[latest_key]["historyInfo"]
+        # if "historyInfo" in data and "historyInfo" in existing_data.get(latest_key, {}):
+        #     data["historyInfo"].update(existing_data[latest_key]["historyInfo"])
 
         # 새 데이터 추가
         existing_data.update(data)
