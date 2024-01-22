@@ -450,10 +450,19 @@ async def update_grid_account(data: dict = Body(...)):
         else:
             existing_data = {}
 
+        # 새 데이터에 historyInfo가 없고 이전 데이터에 historyInfo가 있다면, 이를 복사합니다.
+        latest_key = max(existing_data.keys(), default=None)
+        if (
+            latest_key
+            and "historyInfo" in existing_data[latest_key]
+            and "historyInfo" not in data
+        ):
+            data["historyInfo"] = existing_data[latest_key]["historyInfo"]
+
         # 새 데이터 추가
         existing_data.update(data)
 
-        # 키 개수가 5000개를 초과하는 경우, 가장 오래된 데이터를 삭제
+        # 키 개수가 3000개를 초과하는 경우, 가장 오래된 데이터를 삭제
         while len(existing_data) > 3000:
             oldest_key = min(existing_data.keys())
             del existing_data[oldest_key]
