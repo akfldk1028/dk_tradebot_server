@@ -451,6 +451,7 @@ async def update_grid_account(data: dict = Body(...)):
             existing_data = {}
 
         # 새 데이터에 historyInfo가 없고 이전 데이터에 historyInfo가 있다면, 이를 복사합니다.
+        latest_key = max(existing_data.keys(), default=None)
         # if (
         #     "historyInfo" not in data
         #     and latest_key
@@ -463,7 +464,6 @@ async def update_grid_account(data: dict = Body(...)):
             if "historyInfo" not in data:
                 data["historyInfo"] = {}
             data["historyInfo"].update(existing_data[latest_key]["historyInfo"])
-
         # 새 데이터 추가
         existing_data.update(data)
 
