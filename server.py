@@ -306,8 +306,8 @@ async def fetch_data(symbol: str = Query(...)):
 async def fetch_data(symbol: str = Query(...)):
     try:
         end_time = int(time.time() * 1000)  # 현재 시간을 밀리초로 계산
-        start_time = end_time - 240 * 24 * 60 * 60 * 1000  # 30일 전 시간을 밀리초로 계산
-
+        start_time = end_time - 60 * 24 * 60 * 60 * 1000  # 30일 전 시간을 밀리초로 계산
+        # 원래 240
         params = {
             "symbol": symbol,
             "interval": "1d",
